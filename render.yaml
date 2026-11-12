@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: country-atlas
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: RESTCOUNTRIES_KEY
+        sync: false
