@@ -15,10 +15,25 @@ import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-# Set RESTCOUNTRIES_KEY in your environment to override this value.
-API_KEY = os.environ.get("RESTCOUNTRIES_KEY", "rc_live_3ee71fbaaf3e46a19c7b61cbfe6198c3")
-PORT = int(os.environ.get("PORT", "8000"))
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_key():
+    """Key comes from the RESTCOUNTRIES_KEY setting, or from api_key.txt next to this file (local use only)."""
+    key = os.environ.get("RESTCOUNTRIES_KEY", "").strip()
+    if not key:
+        try:
+            with open(os.path.join(HERE, "api_key.txt")) as f:
+                key = f.read().strip()
+        except OSError:
+            pass
+    return key
+
+
+API_KEY = load_key()
+PORT = int(os.environ.get("PORT", "8000"))
+# Hosts set PORT; listen on all interfaces there, and only on this computer when run locally.
+HOST = "0.0.0.0" if "PORT" in os.environ else "127.0.0.1"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -65,5 +80,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("Country Atlas running at http://localhost:%d  (Ctrl+C to stop)" % PORT)
-    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    if not API_KEY:
+        print("WARNING: no API key found. Set RESTCOUNTRIES_KEY or create api_key.txt containing the key.")
+    print("Country Atlas running on port %d  (Ctrl+C to stop)" % PORT)
+    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
